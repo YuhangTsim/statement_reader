@@ -1,0 +1,4 @@
+*.pdf
+*.log
+!/data/pdf/test.pdf
+/src/logs/*
