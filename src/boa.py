@@ -21,7 +21,7 @@ class BOA_CREDIT():
         self.payments_and_other_credits = None
         self.summary = None
         self.close_date = None
-        # self.fees_
+        self.close_yesr = None
 
         with open(self.file_path, 'rb') as file:
             file_string = pdf_to_string(file)
@@ -125,7 +125,7 @@ class BOA_CREDIT():
     def get_trans_details(self, transactions, part='payment'):
         """ raw line to value """
         trans_result = []
-        for line in transactions:
+        for line in transactions:  # TODO: can not parse full info on multi-line transaction
             if not line:
                 continue
             fields = {}
@@ -156,6 +156,11 @@ class BOA_CREDIT():
                 ',', '')) if fields['amount'] else None
             if fields['amount'] and fields['transaction_date']:
                 trans_result.append(fields)
+            if self.close_date:
+                fields['transaction_date'] = self.add_year_to_datefield(
+                    fields['transaction_date'])
+                fields['posting_date'] = self.add_year_to_datefield(
+                    fields['posting_date'])
         return trans_result
 
     def get_total(self, file_string, part='payment'):
@@ -197,16 +202,24 @@ class BOA_CREDIT():
         res = ''
         if "Virtural Card" in transaction:
             res = "-1111"
-            new_transaction = transaction.replace("Virtural Card", '', 1)
+            # new_transaction = transaction.replace("Virtural Card", '', 1)
         else:
             res = self.retrive_regex(re.findall(r'\d{4}', transaction), -1)
             # res, new_transaction = self.regex_handler(transaction, r'\d{4}', -1)
         # return res, new_transaction
         return res
 
+    def add_year_to_datefield(self, datefield):
+        """ Add year to transaction data & posting date in transaction"""
+        if not self.close_yesr and self.close_date:
+            self.close_yesr = str(self.close_date.year)
+        if datefield:
+            res = datefield + '/' + self.close_yesr
+            return res
+
 
 if __name__ == '__main__':
     fpath = './../data/pdf/boa/credit/eStmt_2019-02-28.pdf'
     boa = BOA_CREDIT(fpath)
-    # print(boa.statement_info)
-    print(boa.summary)
+    print(boa.statement_info)
+    # print(boa.summary)
