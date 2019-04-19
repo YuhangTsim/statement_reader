@@ -38,3 +38,11 @@ def func_recorder(func):
         logger.info("Finish executing function: %s" % func.__name__)
         return res
     return wrapper
+
+
+def get_project_path():
+    """ get project path """
+    dir_abs_path = os.path.dirname(os.path.abspath(__file__))
+    curr_folder = dir_abs_path.split('/')[-1]
+    project_path = dir_abs_path.replace(curr_folder, '')
+    return project_path

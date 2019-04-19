@@ -5,7 +5,6 @@ from PdfToString import pdf_to_string
 from utils import init_logger, func_recorder
 
 # todo: add exception control
-# todo: transform date from string to date, adding year info
 # todo: log func
 
 

@@ -2,3 +2,5 @@
 *.log
 !/data/pdf/test.pdf
 /src/logs/*
+tmp.*
+*.db
