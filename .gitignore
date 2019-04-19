@@ -4,3 +4,4 @@
 /src/logs/*
 tmp.*
 *.db
+*.pyc
