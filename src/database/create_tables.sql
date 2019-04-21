@@ -17,6 +17,8 @@ create table account
     account_number integer not null,
     account_type_id integer,
     bank_id integer,
+    first_balance real,
+    first_balance_date date,
     FOREIGN KEY (bank_id) REFERENCES bank(bank_id),
     FOREIGN KEY (account_id) REFERENCES account_type(account_type_id)
 );

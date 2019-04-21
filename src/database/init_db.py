@@ -1,6 +1,6 @@
 """ Initialize database """
 import sqlite3
-from utils import get_project_path
+from src.utility.utils import get_project_path
 
 
 if __name__ == '__main__':

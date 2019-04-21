@@ -1,8 +1,8 @@
 ''' BOA statement parser '''
 import re
 from datetime import datetime
-from PdfToString import pdf_to_string
-from utils import init_logger, func_recorder
+from utility.PdfToString import pdf_to_string
+from utility.utils import init_logger, func_recorder
 
 # todo: add exception control
 # todo: log func
