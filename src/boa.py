@@ -1,8 +1,8 @@
 ''' BOA statement parser '''
 import re
 from datetime import datetime
-from utility.PdfToString import pdf_to_string
-from utility.utils import init_logger, func_recorder
+from src.utility.PdfToString import pdf_to_string
+from src.utility.utils import init_logger, func_recorder
 
 # todo: add exception control
 # todo: log func
@@ -115,9 +115,7 @@ class BOA_CREDIT():
 
         transaction_pages_temp = file_string.split(page_delimiter[0])[0]
         transaction_pages_temp = transaction_pages_temp.split(
-            page_delimiter
-            [1],
-            2)
+            page_delimiter[1], 2)
         transactions_pages = transaction_pages_temp[-1]
         return transactions_pages
 
@@ -220,5 +218,5 @@ class BOA_CREDIT():
 if __name__ == '__main__':
     fpath = './../data/pdf/boa/credit/eStmt_2019-02-28.pdf'
     boa = BOA_CREDIT(fpath)
-    print(boa.statement_info)
-    # print(boa.summary)
+    # print(boa.statement_info)
+    print(boa.summary)

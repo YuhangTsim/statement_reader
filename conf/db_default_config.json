@@ -1,0 +1,48 @@
+{
+    // bank name
+    "bank": {
+        "1": {
+            "bank_name": "boa"
+        },
+        "2": {
+            "bank_name": "chase"
+        }
+    },
+    // account type
+    "account_type": {
+        "1": {
+            "DESCRIPTION": "checking"
+        },
+        "2": {
+            "DESCRIPTION": "saving"
+        }
+    },
+    // card type
+    "card_type": {
+        "1": {
+            "DESCRIPTION": "debit"
+        },
+        "2": {
+            "DESCRIPTION": "credit"
+        }
+    },
+    // transaction type
+    "transaction_type": {
+        "1": {
+            "bank_id": 1,
+            "DESCRIPTION": "payment"
+        },
+        "2": {
+            "bank_id": 1,
+            "DESCRIPTION": "purchase"
+        },
+        "3": {
+            "bank_id": 1,
+            "DESCRIPTION": "fee"
+        },
+        "4": {
+            "bank_id": 1,
+            "DESCRIPTION": "interest"
+        }
+    }
+}

@@ -4,6 +4,7 @@ import sqlite3
 
 
 def pdf_to_string(file_object):
+    """ read pdf file into string """
     pdfData = file_object.read()
     tf = tempfile.NamedTemporaryFile()
     tf.write(pdfData)

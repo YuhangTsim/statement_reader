@@ -5,3 +5,5 @@
 tmp.*
 *.db
 *.pyc
+test.*
+*.ipynb

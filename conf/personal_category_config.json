@@ -1,0 +1,45 @@
+{
+    // define your personal category, {<description>, <comment>}
+    "personal_category": {
+        "1": {
+            "description": "deposit",
+            "comment": "transfer, deposit, wire transfer"
+        },
+        "2": {
+            "description": "study",
+            "comment": ""
+        },
+        "3": {
+            "description": "food",
+            "comment": "resturuant, cafe"
+        },
+        "4": {
+            "description": "shopping",
+            "comment": ""
+        },
+        "5": {
+            "description": "commute",
+            "comment": "parking, garage, gas, car insurance, ticket"
+        },
+        "6": {
+            "description": "living",
+            "comment": "gorcery, healcare"
+        },
+        "7": {
+            "description": "housing",
+            "comment": "rantal, utility, apt insurance"
+        },
+        "8": {
+            "description": "travel",
+            "comment": ""
+        },
+        "9": {
+            "description": "car",
+            "comment": ""
+        },
+        "10": {
+            "description": "oudoor",
+            "comment": "equipment, traning, membership fee"
+        }
+    }
+}
