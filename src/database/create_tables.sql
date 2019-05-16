@@ -76,14 +76,14 @@ create table personal_category(
 
 create table transactions
 (
-    transaction_id INTEGER PRIMARY KEY,
+    -- transaction_id INTEGER PRIMARY KEY,
     trans_type_id INTEGER ,
     transaction_date date,
     post_date date,
     DESCRIPTION text,
     ref_number INTEGER,
     account_number INTEGER,
-    amount real,
+    amount real not null,
     b_category_id integer,
     p_category_id integer,
     overwrite_p_category_id integer,

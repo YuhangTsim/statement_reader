@@ -212,6 +212,7 @@ class BOA_CREDIT():
             self.close_yesr = str(self.close_date.year)
         if datefield:
             res = datefield + '/' + self.close_yesr
+            res = datetime.strptime(res, '%m/%d/%Y').strftime('%Y-%m-%d')
             return res
 
 
