@@ -8,11 +8,19 @@ from src.utility.utils import init_logger, func_recorder
 # todo: log func
 
 
-class BOA_CREDIT():
-    ''' Class for BOA statement'''
+class BANK_STATEMENT():
+    """ bank base """
 
     def __init__(self, file_path):
         self.file_path = file_path
+        self.bank_name = None
+
+
+class BOA_CREDIT(BANK_STATEMENT):
+    ''' Class for BOA statement'''
+
+    def __init__(self, file_path):
+        super().__init__(file_path)
         self.log = init_logger('BOA')
         self.log.info('BOA credit job start')
 
@@ -23,13 +31,16 @@ class BOA_CREDIT():
         self.close_yesr = None
 
         with open(self.file_path, 'rb') as file:
-            file_string = pdf_to_string(file)
-        self.statement_info = self.get_credit_statement_info(file_string)
+            self.raw_pdf_string = pdf_to_string(file)
+        self.delimiter = self.__get_delimiter()
+        self.statement_transaction = self.get_credit_statement_transaction(self.raw_pdf_string)
         self.log.info('BOA credit job finished')
 
-    def get_account_summary(self, file_string, page_delimiter='YUHANG ZHAN'):
+    def get_account_summary(self, file_string, page_delimiter):
         """ retrieve details in account summary """
         account_summary = {}
+        account_summary['accoun_type'] = 'credit'
+        account_summary['account'] = re.findall('Account#[\s\d{4}]+\s(\d{4})', file_string)
 
         first_page = file_string.split(page_delimiter)[1].strip()
         account_summary["previous_balance"] = re.findall(
@@ -45,6 +56,9 @@ class BOA_CREDIT():
         account_summary['new_balance_total'] = re.findall(
             r"New Balance Total\s+(-)?\$([\d|,]+\.\d+)\s", first_page
         )
+        account_summary['total_credit_line'] = re.findall(
+            r"Total Credit Line\s+(-)?\$([\d|,]+\.\d+)\s", first_page
+        )
         state_close_date = re.findall(
             r"Statement Closing Date\s+(\d{2}/\d{2}/\d{4})", first_page
         )[0]
@@ -58,15 +72,18 @@ class BOA_CREDIT():
         for line in details_list:
             details = details_list[line][0]
             if details:
+                if line == 'account':
+                    res[line] = details
+                    continue
                 neg = details[0]
                 num = details[1].replace(',', '')
                 res[line] = float(num) if not neg else -float(num)
         return res
 
     @func_recorder
-    def get_credit_statement_info(self, file_string):
+    def get_credit_statement_transaction(self, file_string):
         ''' retrive all info from a statement '''
-        self.summary, self.close_date = self.get_account_summary(file_string)
+        self.summary, self.close_date = self.get_account_summary(file_string, self.delimiter)
         parts = ['payment', 'purchase', 'fee', 'interest']
         transactions = {}
         for part in parts:
@@ -215,9 +232,14 @@ class BOA_CREDIT():
             res = datetime.strptime(res, '%m/%d/%Y').strftime('%Y-%m-%d')
             return res
 
+    def __get_delimiter(self):
+        res = re.findall('P.O. Box 15019\n\s+(\w+\s\w+)\n', self.raw_pdf_string)
+        assert res
+        return res[0]
+
 
 if __name__ == '__main__':
     fpath = './../data/pdf/boa/credit/eStmt_2019-02-28.pdf'
     boa = BOA_CREDIT(fpath)
-    # print(boa.statement_info)
+    # print(boa.statement_transaction)
     print(boa.summary)

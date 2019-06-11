@@ -1,4 +1,6 @@
 {
     "python.linting.pylintEnabled": true,
-    "python.pythonPath": "/Users/yuhangzhan/anaconda3/envs/pdf_project/bin/python"
+    "python.pythonPath": "/Users/yuhangzhan/anaconda3/envs/pdf_project/bin/python",
+    "python.linting.enabled": true,
+    "python.linting.pep8Enabled": false
 }

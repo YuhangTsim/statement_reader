@@ -67,9 +67,3 @@ def import_conf_query(file_path):
     splited_sql = [query for query in raw_sql.split(';') if query]
     dict_sql = [(query.split()[2], query.strip()+';') for query in splited_sql]
     return dict(dict_sql)
-
-
-def del_db(file_path):
-    '''drop db if fail to init'''
-    subprocess.run(['rm', file_path])
-    print('Drop db.')

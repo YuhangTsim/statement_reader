@@ -44,10 +44,8 @@ create table card
     card_id INTEGER PRIMARY KEY,
     card_type_id INTEGER,
     card_number INTEGER not null UNIQUE ,
-    account_id INTEGER,
-    activated BOOLEAN,
+    activated BOOLEAN DEFAULT 1,
     creadit_amount REAL,
-    FOREIGN KEY (account_id) REFERENCES account(account_id),
     FOREIGN KEY (card_type_id) REFERENCES card_type(card_type_id)
 );
 
