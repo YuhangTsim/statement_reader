@@ -20,6 +20,11 @@ class BILLING_DB():
         self.conn = None
         self.cursor = None
 
+        if self.__db_exist():
+            self.connect()
+        else:
+            self.init_db()
+
     def init_db(self):
         """init db if not exist"""
         default_conf = import_conf(self.project_path + self.DEFAULT_CONFIG_PATH)
@@ -43,7 +48,7 @@ class BILLING_DB():
 
     def connect(self):
         """ get db connection"""
-        assert self.db_exist, "database does not exist"
+        assert self.__db_exist(), "database does not exist"
         if not self.conn:
             self.conn = sqlite3.connect(self.db_loc)
             self.cursor = self.conn.cursor()
@@ -51,27 +56,35 @@ class BILLING_DB():
 
     def import_statement(self, bank_statement):
         """ insert statement info into db """
-        self.__sert_new_card(bank_statement.summary)
+        self.__insert_new_card(bank_statement.summary)
+        self.__import_transaction(bank_statement.transactions)
+        self.conn.commit()
 
-    def __import_transaction(self, bank_statement):
+    def __import_transaction(self, transactions):
         """ insert transaction into db """
-        trans = [tran for _, parts in bank_statement.transaction.items() for tran in parts]
-        pass
+        INSERT_TRANS = "INSERT INTO raw_transactions (trans_type, transaction_date, post_date, ref_number, account_number, amount, DESCRIPTION) VALUES (?, ?, ?, ?, ?, ?, ?)"
+
+        for _, trans in transactions.items():
+            trans = [self.__flatten_transaction(tran) for tran in trans]
+            self.cursor.executemany(INSERT_TRANS, trans)
+
+    def __flatten_transaction(self, transaction):
+        assert isinstance(transaction, dict)
+        return tuple([value for _, value in transaction.items()])
 
     def __insert_new_card(self, bank_statement_summary):
         """ insert new card into db """
-        card = bank_statement_summary['account']
+        card = int(bank_statement_summary['account'])
 
         self.cursor.execute('select card_number from card')
-        exist_cards = dict(self.cursor.fetchall())
+        exist_cards = [i[0] for i in list(self.cursor.fetchall())]
         if card in exist_cards:
             return
         card_id = len(exist_cards)+1
         card_type_id = self.__get_card_type_id(bank_statement_summary['account_type'])
         total_credit_line = bank_statement_summary['total_credit_line']
-        query = "INSERT INTO card (card_id, card_type_id, card_number, creadit_amount) VALUES (?, ?, ?, ?, ?)"
-        self.cursor.executemany(query, (card_id, card_type_id, card, total_credit_line))
-        self.conn.commit()
+        query = "INSERT INTO card (card_id, card_type_id, card_number, creadit_amount) VALUES (?, ?, ?, ?)"
+        self.cursor.execute(query, (card_id, card_type_id, card, total_credit_line))
 
     def __get_card_type_id(self, card_type):
         type_id = {
@@ -80,13 +93,17 @@ class BILLING_DB():
         }
         return type_id[card_type]
 
-    def __db_exist(self, db_loc):
+    def __db_exist(self):
         """check db existence"""
-        return os.path.isfile(db_loc)
+        return os.path.isfile(self.db_loc)
 
     def __drop(self):
+        subprocess.run(['rm', self.db_loc])
+
+    def resetdb(self):
         """ reset db """
         subprocess.run(['rm', self.db_loc])
+        self.init_db()
 
     def test(self):
         """ testing everything """

@@ -91,3 +91,22 @@ create table transactions
     FOREIGN KEY (overwrite_p_category_id) REFERENCES personal_category(p_category_id),
     FOREIGN KEY (trans_type_id) REFERENCES transaction_type(transaction_type_id)
 );
+
+create table raw_transactions
+(
+    trans_type text ,
+    transaction_date date,
+    post_date date,
+    DESCRIPTION text,
+    ref_number INTEGER,
+    account_number INTEGER,
+    amount real not null,
+    p_category_id integer,
+    overwrite_p_category_id integer,
+    FOREIGN KEY (overwrite_p_category_id) REFERENCES personal_category(p_category_id)
+);
+
+create table files
+(
+    file_name text
+);

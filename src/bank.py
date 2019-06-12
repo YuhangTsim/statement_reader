@@ -4,42 +4,36 @@ from datetime import datetime
 from src.utility.PdfToString import pdf_to_string
 from src.utility.utils import init_logger, func_recorder
 
+from src.model.credit_statement import CreditStatement
+
 # todo: add exception control
 # todo: log func
 
 
-class BANK_STATEMENT():
-    """ bank base """
-
-    def __init__(self, file_path):
-        self.file_path = file_path
-        self.bank_name = None
-
-
-class BOA_CREDIT(BANK_STATEMENT):
+class BankOfAmerica_Credit(CreditStatement):
     ''' Class for BOA statement'''
 
     def __init__(self, file_path):
         super().__init__(file_path)
         self.log = init_logger('BOA')
-        self.log.info('BOA credit job start')
+        # self.log.info('BOA credit job start')
 
         self.previous_balance = None
         self.payments_and_other_credits = None
-        self.summary = None
         self.close_date = None
         self.close_yesr = None
 
         with open(self.file_path, 'rb') as file:
             self.raw_pdf_string = pdf_to_string(file)
         self.delimiter = self.__get_delimiter()
-        self.statement_transaction = self.get_credit_statement_transaction(self.raw_pdf_string)
-        self.log.info('BOA credit job finished')
+        self.summary, self.close_date = self.get_summary(self.raw_pdf_string, self.delimiter)
+        self.transactions = self.get_transactions(self.raw_pdf_string)
+        # self.log.info('BOA credit job finished')
 
-    def get_account_summary(self, file_string, page_delimiter):
+    def get_summary(self, file_string, page_delimiter):
         """ retrieve details in account summary """
         account_summary = {}
-        account_summary['accoun_type'] = 'credit'
+        account_summary['account_type'] = ['credit']
         account_summary['account'] = re.findall('Account#[\s\d{4}]+\s(\d{4})', file_string)
 
         first_page = file_string.split(page_delimiter)[1].strip()
@@ -72,7 +66,7 @@ class BOA_CREDIT(BANK_STATEMENT):
         for line in details_list:
             details = details_list[line][0]
             if details:
-                if line == 'account':
+                if line in ('account', 'account_type'):
                     res[line] = details
                     continue
                 neg = details[0]
@@ -80,10 +74,8 @@ class BOA_CREDIT(BANK_STATEMENT):
                 res[line] = float(num) if not neg else -float(num)
         return res
 
-    @func_recorder
-    def get_credit_statement_transaction(self, file_string):
+    def get_transactions(self, file_string):
         ''' retrive all info from a statement '''
-        self.summary, self.close_date = self.get_account_summary(file_string, self.delimiter)
         parts = ['payment', 'purchase', 'fee', 'interest']
         transactions = {}
         for part in parts:
@@ -91,10 +83,10 @@ class BOA_CREDIT(BANK_STATEMENT):
                 continue
             elif part == 'interest' and self.summary['interest_charged'] == 0:
                 continue
-            transactions[part] = self.get_transactions(file_string, part)
+            transactions[part] = self.get_transactions_detail(file_string, part)
         return transactions
 
-    def get_transactions(self, file_string, part='payment'):
+    def get_transactions_detail(self, file_string, part='payment'):
         ''' retrive detail for each transaction  '''
         trans_parts = {
             'payment': ('TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD', 'Payments and Other Credits'),
@@ -240,6 +232,6 @@ class BOA_CREDIT(BANK_STATEMENT):
 
 if __name__ == '__main__':
     fpath = './../data/pdf/boa/credit/eStmt_2019-02-28.pdf'
-    boa = BOA_CREDIT(fpath)
+    boa = BankOfAmerica_Credit(fpath)
     # print(boa.statement_transaction)
     print(boa.summary)
