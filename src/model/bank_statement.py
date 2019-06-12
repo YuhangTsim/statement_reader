@@ -4,6 +4,7 @@ class BankStatment():
     def __init__(self, file_path):
         self.file_path = file_path
         self.bank_name = None
+        self.account_type = None
         self.file_name = file_path.rsplit('/')[-1]
         self.summary = None
         self.transactions = None

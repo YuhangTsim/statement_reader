@@ -1,7 +1,7 @@
 from src.model.bank_statement import BankStatment
 
 
-class CreditStatement(BankStatment):
+class DebitStatement(BankStatment):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -13,7 +13,6 @@ class CreditStatement(BankStatment):
             {
                 'account_type': <text>, (credit or debit)
                 'account': <int/str>, (last 4 digit is fine)
-                'total_credit_line': <float>
                 ...
             }
         """
