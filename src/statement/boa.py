@@ -1,10 +1,11 @@
+
 ''' BOA statement parser '''
 import re
 from datetime import datetime
 from src.utility.PdfToString import pdf_to_string
 from src.utility.utils import init_logger, func_recorder
 
-from src.model.credit_statement import CreditStatement
+from src.statement.bank_statement import CreditStatement
 
 # todo: add exception control
 # todo: log func
@@ -22,6 +23,7 @@ class BankOfAmerica_Credit(CreditStatement):
         self.payments_and_other_credits = None
         self.close_date = None
         self.close_yesr = None
+        self.delimiter = None
 
         with open(self.file_path, 'rb') as file:
             self.raw_pdf_string = pdf_to_string(file)

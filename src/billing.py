@@ -6,6 +6,9 @@ import sqlite3
 import subprocess
 from src.utility.utils import get_project_path, import_conf, import_conf_query
 
+# TODO: add bank name to files table
+# TODO: change to sqlalchemy
+
 
 class BILLING_DB():
     """ """
@@ -56,11 +59,15 @@ class BILLING_DB():
 
     def import_statement(self, bank_statement):
         """ insert statement info into db """
-        self.__insert_new_card(bank_statement.summary)
-        self.__import_transaction(bank_statement.transactions)
-        self.conn.commit()
+        is_new_file = self.__insert_filename(bank_statement.file_name)
+        if is_new_file:
+            self.__insert_new_card(bank_statement.summary)
+            self.__insert_transaction(bank_statement.transactions)
+            self.conn.commit()
+            return
+        self.conn.rollback()
 
-    def __import_transaction(self, transactions):
+    def __insert_transaction(self, transactions):
         """ insert transaction into db """
         INSERT_TRANS = "INSERT INTO raw_transactions (trans_type, transaction_date, post_date, ref_number, account_number, amount, DESCRIPTION) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
@@ -82,9 +89,24 @@ class BILLING_DB():
             return
         card_id = len(exist_cards)+1
         card_type_id = self.__get_card_type_id(bank_statement_summary['account_type'])
-        total_credit_line = bank_statement_summary['total_credit_line']
-        query = "INSERT INTO card (card_id, card_type_id, card_number, creadit_amount) VALUES (?, ?, ?, ?)"
-        self.cursor.execute(query, (card_id, card_type_id, card, total_credit_line))
+        if bank_statement_summary['account_type'] == 'credit':
+            total_credit_line = bank_statement_summary['total_credit_line']
+            query = "INSERT INTO card (card_id, card_type_id, card_number, creadit_amount) VALUES (?, ?, ?, ?)"
+            data = (card_id, card_type_id, card, total_credit_line)
+        else:
+            query = "INSERT INTO card (card_id, card_type_id, card_number) VALUES (?, ?, ?)"
+            data = (card_id, card_type_id, card)
+        self.cursor.execute(query, data)
+
+    def __insert_filename(self, filename):
+        self.cursor.execute("select file_name from files")
+        exist_files = [i[0] for i in list(self.cursor.fetchall())]
+        if filename in exist_files:
+            print("File exists.")
+            return False
+        else:
+            self.cursor.execute(f"INSERT INTO files (file_name) values ('{filename}')")
+            return True
 
     def __get_card_type_id(self, card_type):
         type_id = {
