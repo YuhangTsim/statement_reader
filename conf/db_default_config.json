@@ -29,19 +29,15 @@
     // transaction type
     "transaction_type": {
         "1": {
-            "bank_id": 1,
             "DESCRIPTION": "payment"
         },
         "2": {
-            "bank_id": 1,
             "DESCRIPTION": "purchase"
         },
         "3": {
-            "bank_id": 1,
             "DESCRIPTION": "fee"
         },
         "4": {
-            "bank_id": 1,
             "DESCRIPTION": "interest"
         }
     }

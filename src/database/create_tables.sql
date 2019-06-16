@@ -42,19 +42,19 @@ create table card_type
 create table card
 (
     card_id INTEGER PRIMARY KEY,
+    bank_id INTEGER, 
     card_type_id INTEGER,
     card_number INTEGER not null UNIQUE ,
     activated BOOLEAN DEFAULT 1,
     creadit_amount REAL DEFAULT 0,
-    FOREIGN KEY (card_type_id) REFERENCES card_type(card_type_id)
+    FOREIGN KEY (card_type_id) REFERENCES card_type(card_type_id),
+    FOREIGN KEY (bank_id) REFERENCES bank(bank_id)
 );
 
 create table transaction_type
 (
     transaction_type_id INTEGER PRIMARY KEY,
-    bank_id INTEGER,
-    DESCRIPTION text,
-    FOREIGN KEY (bank_id) REFERENCES bank(bank_id)
+    DESCRIPTION text
 );
 
 -- table for category definition from bank
@@ -92,21 +92,27 @@ create table transactions
     FOREIGN KEY (trans_type_id) REFERENCES transaction_type(transaction_type_id)
 );
 
-create table raw_transactions
-(
+create table staging_transactions
+(   
     trans_type text ,
     transaction_date date,
     post_date date,
     DESCRIPTION text,
     ref_number INTEGER,
     account_number INTEGER,
-    amount real not null,
-    p_category_id integer,
-    overwrite_p_category_id integer,
-    FOREIGN KEY (overwrite_p_category_id) REFERENCES personal_category(p_category_id)
+    amount real not null
 );
 
 create table files
-(
+(   bank text,
+    statement_type text,
     file_name text
+);
+
+create table transaction_description(
+    DESCRIPTION text,
+    p_category_id integer,
+    b_category_id integer,
+    FOREIGN KEY (b_category_id) REFERENCES bank_category(b_category_id),
+    FOREIGN KEY (p_category_id) REFERENCES personal_category(p_category_id)
 );

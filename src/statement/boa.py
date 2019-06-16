@@ -5,7 +5,7 @@ from datetime import datetime
 from src.utility.PdfToString import pdf_to_string
 from src.utility.utils import init_logger, func_recorder
 
-from src.statement.bank_statement import CreditStatement
+from src.model.bank_statement import CreditStatement
 
 # todo: add exception control
 # todo: log func
@@ -17,7 +17,7 @@ class BankOfAmerica_Credit(CreditStatement):
     def __init__(self, file_path):
         super().__init__(file_path)
         self.log = init_logger('BOA')
-        # self.log.info('BOA credit job start')
+        self.bank_name = 'boa'
 
         self.previous_balance = None
         self.payments_and_other_credits = None
@@ -30,7 +30,6 @@ class BankOfAmerica_Credit(CreditStatement):
         self.delimiter = self.__get_delimiter()
         self.summary, self.close_date = self.get_summary(self.raw_pdf_string, self.delimiter)
         self.transactions = self.get_transactions(self.raw_pdf_string)
-        # self.log.info('BOA credit job finished')
 
     def get_summary(self, file_string, page_delimiter):
         """ retrieve details in account summary """
@@ -137,18 +136,17 @@ class BankOfAmerica_Credit(CreditStatement):
             if not line:
                 continue
             fields = {}
+            fields['amount'] = self.retrive_regex(
+                'amount', r'-?[\d|,]+\.\d{2}', line, 0)
+            if not fields['amount']:
+                continue
             fields['types'] = part
             fields['transaction_date'] = self.retrive_regex(
-                re.findall(r'(\d+/\d+)', line), 0)
-            # fields['transaction_date'], line = self.regex_handler(
-            #     line, r'(\d+/\d+)', 0)
+                'transaction_date', r'(\d+/\d+)', line, 0)
             fields['posting_date'] = self.retrive_regex(
-                re.findall(r'(\d+/\d+)', line), 1)
-            fields['reference_number'] = self.retrive_regex(
-                re.findall(r'\d{4}', line), -2)
-            fields['account_number'] = self.account_regex_handler(line)
-            fields['amount'] = self.retrive_regex(
-                re.findall(r'-?[\d|,]+\.\d{2}', line), 0)
+                'posting_date', r'(\d+/\d+)', line, 1)
+            fields['reference_number'] = self.VC_regex_handler('reference_number', line)
+            fields['account_number'] = self.VC_regex_handler('account_number', line)
 
             line_text = line
             for field in fields:
@@ -162,13 +160,21 @@ class BankOfAmerica_Credit(CreditStatement):
                 fields['account_number']) if fields['account_number'] else None
             fields['amount'] = float(fields['amount'].replace(
                 ',', '')) if fields['amount'] else None
-            if fields['amount'] and fields['transaction_date']:
-                trans_result.append(fields)
+
             if self.close_date:
                 fields['transaction_date'] = self.add_year_to_datefield(
                     fields['transaction_date'])
                 fields['posting_date'] = self.add_year_to_datefield(
                     fields['posting_date'])
+
+            if fields['amount'] and fields['transaction_date']:
+                fields_ordered = {}
+                for f in (
+                    'types', 'transaction_date', 'posting_date', 'reference_number', 'account_number', 'amount',
+                        'description'):
+                    fields_ordered[f] = fields[f]
+                trans_result.append(fields_ordered)
+
         return trans_result
 
     def get_total(self, file_string, part='payment'):
@@ -188,33 +194,32 @@ class BankOfAmerica_Credit(CreditStatement):
             self.log.error(f'Error total: {trans_total}')
         return res
 
-    def retrive_regex(self, findall_res, idx):
+    def retrive_regex(self, field_name, regex, transaction, idx):
         ''' return regex value if exist'''
+        findall_res = re.findall(regex, transaction)
         if findall_res:
             try:
                 return findall_res[idx]
             except Exception as e:
-                print('----')  # TODO: add excpetion control
+                print(f'---- {field_name} @ {findall_res} @ {idx} @ [{transaction}]')
 
-    # def regex_handler(self, transaction, regex, idx): # ! Deprecated method, fix needed
-    #     ''' general field handler
-    #     '''
-    #     res = self.retrive_regex(re.findall(regex, transaction), idx)
-    #     new_transaction = transaction.replace(res, '', 1)
-    #     return res, new_transaction
-
-    def account_regex_handler(self, transaction):
+    def VC_regex_handler(self, field_name, transaction):
         ''' func to parse account number in transactions, 
             1. deal with "Virtual Card" value in account number field #todo : to fix -- current method will leave "Virtual Card" in description
         '''
         res = ''
-        if "Virtural Card" in transaction:
-            res = "-1111"
-            # new_transaction = transaction.replace("Virtural Card", '', 1)
-        else:
-            res = self.retrive_regex(re.findall(r'\d{4}', transaction), -1)
-            # res, new_transaction = self.regex_handler(transaction, r'\d{4}', -1)
-        # return res, new_transaction
+        if field_name == 'account_number':
+            if "Virtual Card" in transaction:
+                res = "-1"
+            else:
+                res = self.retrive_regex(field_name, r'\d{4}', transaction, -1)
+        elif field_name == 'reference_number':
+            if "Virtual Card" in transaction:
+                res = '-1'
+            elif "LATE FEE" in transaction:
+                res = '-2'
+            else:
+                res = self.retrive_regex(field_name, r'\d{4}', transaction, -2)
         return res
 
     def add_year_to_datefield(self, datefield):
