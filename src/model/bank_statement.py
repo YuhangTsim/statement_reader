@@ -22,7 +22,7 @@ class BankStatement():
 
     def get_transaction(self):
         """ overwrite this func 
-            return dict to self.transactions:
+            return dict to self.transactions: <field order is important !!!>
             {
                 'transaction_type':[
                     {
