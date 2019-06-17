@@ -1,3 +1,6 @@
+from src.utility.PdfToString import pdf_to_string
+
+
 class BankStatement():
     """ bank base """
 
@@ -8,6 +11,13 @@ class BankStatement():
         self.file_name = file_path.split(path_delimiter)[-1]
         self.summary = None
         self.transactions = None
+
+        self.raw_pdf_string = self.__get_raw_string()
+
+    def __get_raw_string(self):
+        with open(self.file_path, 'rb') as file:
+            raw_pdf_string = pdf_to_string(file)
+        return raw_pdf_string
 
     def get_summary(self):
         """ overwrite this func 
@@ -28,8 +38,8 @@ class BankStatement():
                     {
                         'type': <TEXT>,
                         'transaction_date': <YYYY-MM-DD>,
-                        'posting_date': <YYYY-MM-DD>,
-                        'reference_number': <INT>,
+                        'posting_date': <YYYY-MM-DD> or 'Null',
+                        'reference_number': <INT> or 'Null',
                         'account_number': <INT>,
                         'amount': <FLOAT>,
                         'description': <TEXT>

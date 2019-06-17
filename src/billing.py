@@ -85,7 +85,7 @@ class BILLING_DB():
             self.cursor.executemany(INSERT_TRANS, trans)
 
     def __flatten_transaction(self, transaction):
-        assert isinstance(transaction, dict)
+        assert isinstance(transaction, dict), f"{transaction} if not a dict"
         return tuple([value for _, value in transaction.items()])
 
     def __insert_new_card(self, bank_name, bank_statement_summary):
@@ -100,7 +100,7 @@ class BILLING_DB():
         bank_id = self.__get_bank_id(bank_name)
         card_type_id = self.__get_card_type_id(bank_statement_summary['account_type'])
         if bank_statement_summary['account_type'] == 'credit':
-            total_credit_line = bank_statement_summary['total_credit_line']
+            total_credit_line = bank_statement_summary['credit_line']
             query = f"INSERT INTO card (card_id, bank_id, card_type_id, card_number, creadit_amount) VALUES (?, '{bank_id}', ?, ?, ?)"
             data = (card_id, card_type_id, card, total_credit_line)
         else:

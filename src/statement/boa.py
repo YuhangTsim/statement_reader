@@ -2,7 +2,6 @@
 ''' BOA statement parser '''
 import re
 from datetime import datetime
-from src.utility.PdfToString import pdf_to_string
 from src.utility.utils import init_logger, func_recorder
 
 from src.model.bank_statement import CreditStatement
@@ -25,8 +24,6 @@ class BankOfAmerica_Credit(CreditStatement):
         self.close_yesr = None
         self.delimiter = None
 
-        with open(self.file_path, 'rb') as file:
-            self.raw_pdf_string = pdf_to_string(file)
         self.delimiter = self.__get_delimiter()
         self.summary, self.close_date = self.get_summary(self.raw_pdf_string, self.delimiter)
         self.transactions = self.get_transactions(self.raw_pdf_string)
@@ -51,7 +48,7 @@ class BankOfAmerica_Credit(CreditStatement):
         account_summary['new_balance_total'] = re.findall(
             r"New Balance Total\s+(-)?\$([\d|,]+\.\d+)\s", first_page
         )
-        account_summary['total_credit_line'] = re.findall(
+        account_summary['credit_line'] = re.findall(
             r"Total Credit Line\s+(-)?\$([\d|,]+\.\d+)\s", first_page
         )
         state_close_date = re.findall(
@@ -59,9 +56,9 @@ class BankOfAmerica_Credit(CreditStatement):
         )[0]
         state_close_date = datetime.strptime(state_close_date, '%m/%d/%Y')
         # print(account_summary)
-        return self.get_summery_detail(account_summary), state_close_date
+        return self.__get_summery_detail(account_summary), state_close_date
 
-    def get_summery_detail(self, details_list):
+    def __get_summery_detail(self, details_list):
         """ regex result to numeric """
         res = {}
         for line in details_list:
@@ -70,7 +67,7 @@ class BankOfAmerica_Credit(CreditStatement):
                 if line in ('account', 'account_type'):
                     res[line] = details
                     continue
-                neg = details[0]
+                neg = details[0] if details[0] == '-' else ''
                 num = details[1].replace(',', '')
                 res[line] = float(num) if not neg else -float(num)
         return res
@@ -89,13 +86,13 @@ class BankOfAmerica_Credit(CreditStatement):
 
     def get_transactions_detail(self, file_string, part='payment'):
         ''' retrive detail for each transaction  '''
-        trans_parts = {
+        trans_parts_delimiter = {
             'payment': ('TOTAL PAYMENTS AND OTHER CREDITS FOR THIS PERIOD', 'Payments and Other Credits'),
             'purchase': ('TOTAL PURCHASES AND ADJUSTMENTS FOR THIS PERIOD', 'Purchases and Adjustments'),
             'fee': ('TOTAL FEES FOR THIS PERIOD', 'Fees'),
             'interest': ('TOTAL INTEREST CHARGED FOR THIS PERIOD', 'Interest Charged')
         }
-        page_delimiter = trans_parts[part]
+        page_delimiter = trans_parts_delimiter[part]
 
         transactions = self.get_transaction_page(file_string, part)
 
